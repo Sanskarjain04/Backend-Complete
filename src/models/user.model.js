@@ -1,4 +1,4 @@
-import mongoose,{ Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt"
 
@@ -23,6 +23,7 @@ const userSchema = new Schema(
             type: String,
             required: true,
             trim: true,
+            index: true
         },
         avatar: {
             type: String, // cloudinary url
@@ -51,17 +52,18 @@ const userSchema = new Schema(
     }
 )
 
-userSchema.pre("save", async function(){
-    if(!this.isModified(password)) return next();
+userSchema.pre("save", async function (next) {
+    if(!this.isModified("password")) return next();
+
     this.password = await bcrypt.hash(this.password, 10)
     next()
 })
 
-userSchema.method.isPasswordCorrect = async function(password){
+userSchema.methods.isPasswordCorrect = async function(password){
     return await bcrypt.compare(password, this.password)
 }
 
-userSchema.method.generateAccessToken = function(){
+userSchema.methods.generateAccessToken = function(){
     return jwt.sign(
         {
             _id: this._id,
@@ -76,7 +78,7 @@ userSchema.method.generateAccessToken = function(){
     )
 }
 
-userSchema.method.generateRefreshToken = function(){
+userSchema.methods.generateRefreshToken = function(){
     return jwt.sign(
         {
             _id: this._id,
